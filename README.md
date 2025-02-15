@@ -1,1 +1,1 @@
-Internet Radio project with ai thinker esp32 audio kit with AC101 codec
+Internet Radio Project with Ai Thinker ESP32 Audio with AC101 CODEC
