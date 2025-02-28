@@ -1,6 +1,6 @@
 /*AI Thinker ESP32 Audio Kit v2.2 rev 2748 PCB(with X-Powers Technology© AC101 audio codec)
  * 
- * ORIGINAL PROJECT(with ES8388) FROM: https://github.com/thieu-b55/ESP32-audiokit-webradio-webinterface
+ * ORIGINAL PROJECT FROM: https://github.com/thieu-b55/ESP32-audiokit-webradio-webinterface
  * 
  * Arduino Board Settings: ESP32 WROVER Module
  * Partition Scheme: Huge APP(3MB No OTA/1MB SPISS)
@@ -14,7 +14,7 @@
  * 
  * FIXED IP ADDRESS IS 192.168.1.4
  * 
- * HTML Change UTF-8 Characters for Hungarian accented characters(e.g. á,é,í,ó,ö,ő,ú,ü,ű character)
+ * HTML Change UTF-8 Characters for Hungarian accented characters(e.g. á,é,í,ó,ö,ő,ú,ü,ű)
  * channel switch with 3-4 Key
  * volume setting with 5 KEY-MINUS and 6 KEY-PLUS
  * 
@@ -68,7 +68,7 @@ AsyncWebServer server(80);
 #define IIC_DATA      33
 
 // Buttons
-#define BUTTON_1_PIN 36            // KEY 1
+#define PIN_PLAY 36                // KEY 1
 #define BUTTON_2_PIN 13            // KEY 2/shared mit SPI_CS
 #define PIN_CH_DOWN 19             // KEY 3
 #define PIN_CH_UP 23               // KEY 4
@@ -109,7 +109,7 @@ int ip_4_int = 4;
 unsigned long watch_op_network;
 unsigned long readin_begin;
 unsigned long readin_nu;
-unsigned long wachttijd = millis();
+unsigned long Waittime = millis();
 bool choose = false;
 bool list_maken = false;
 bool play_mp3 = false;
@@ -119,10 +119,10 @@ bool network;
 bool nog_mp3;
 bool mp3_ok;
 bool mp3_list_maken = false;
-bool ssid_ingevuld = false;
-bool pswd_ingevuld = false;
+bool ssid_entered = false;
+bool pswd_entered = false;
 bool songlisten = false;
-bool songlist_bestaat_bool;
+bool songlist_consists_bool;
 char ip_char[20];
 char songfile[200];
 char mp3file[200];
@@ -144,7 +144,7 @@ char songlist_dir[12];
 char total_mp3[15];
 char mp3_list_folder[10];
 char mp3_list_number[5];
-char leeg[0];
+char Empty[0];
 char senderarray[MAX_NUMBER_CHANNEL][40];
 char urlarray[MAX_NUMBER_CHANNEL][100];
 const char* IP_1_CHOICE = "ip_1_choice";
@@ -154,9 +154,9 @@ const char* IP_4_CHOICE = "ip_4_choice";
 const char* CHOICEMIN_INPUT = "minchoice";
 const char* CHOICEPLUS_INPUT = "pluschoice";
 const char* CONFIRMCHOICE_INPUT ="confirmchoice";
-const char* LAAG = "low_choice";
-const char* MIDDEN = "middle_choice";
-const char* HOOG = "high_choice";
+const char* Low = "low_choice";
+const char* Middle = "middle_choice";
+const char* High = "high_choice";
 const char* VOLUME = "volume_choice";
 const char* VOLUME_CONFIRM = "confirm_volume";
 const char* APssid = "ESP32webradio";
@@ -252,7 +252,7 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
 void testDir(fs::FS &fs, const char * path){
   File root = fs.open(path);
   if(root){
-    songlist_bestaat_bool = true;
+    songlist_consists_bool = true;
   }
 }
 
@@ -397,13 +397,13 @@ void writing_naar_csv(){
     datastring.toCharArray(datastr, (datastring.length() + 1));
     appendFile(SD, "/sender_data.csv", datastr);
   }
-  lees_CSV();
+  Read_CSV();
 }
 
 /*
  * Read in CSV file to Sender and URL Arry
  */
-void lees_CSV(){
+void Read_CSV(){
   CSV_Parser cp("ss", false, ',');
   if(cp.readSDfile("/sender_data.csv")){
     char **station_name = (char**)cp[0];  
@@ -684,7 +684,7 @@ String processor(const String& var){
   }
   if(var == "text1"){
     if((!list_maken) && (!songlisten)){
-      return(leeg);
+      return(Empty);
     }
     if(list_maken){
       String text1 = "read in : ";
@@ -699,7 +699,7 @@ String processor(const String& var){
   }
   if(var == "text2"){
     if(!list_maken){
-      return(leeg);
+      return(Empty);
     }
     else{
       mp3_folder.toCharArray(char_text2, (mp3_folder.length() + 1));
@@ -708,7 +708,7 @@ String processor(const String& var){
   }
  if(var == "text3"){
     if(!list_maken){
-      return(leeg);
+      return(Empty);
     }
     else{
       String text3 = "number mp3's read : ";
@@ -718,7 +718,7 @@ String processor(const String& var){
   }
   if(var == "text4"){
     if(!list_maken){
-      return(leeg);
+      return(Empty);
     }
     else{
       String text4 = String(mp3_number);
@@ -728,7 +728,7 @@ String processor(const String& var){
   }
   if(var == "text5"){
     if(!list_maken){
-      return(leeg);
+      return(Empty);
     }
     else{
       String text5 = "seconds already : ";
@@ -739,7 +739,7 @@ String processor(const String& var){
   
   if(var == "text6"){
     if(!list_maken){
-      return(leeg);
+      return(Empty);
     }
     else{
       int seconden = (millis() - readin_begin) / 1000;
@@ -805,7 +805,7 @@ void html_input(){
       String http_sender = "                         ";
       String http_url = "                                                                             ";
       char terminator = char(0x0a);
-      wachttijd = millis();
+      Waittime = millis();
       choose = true;
       if(request->hasParam(CHOICEMIN_INPUT)){
         choice--;
@@ -839,9 +839,9 @@ void html_input(){
       if((request->hasParam(CONFIRMCHOICE_INPUT)) && (choose == true)){
         choose = false;
         if(choice == -2){
-          songlist_bestaat_bool = false;
+          songlist_consists_bool = false;
           testDir(SD, "/songlist0");
-          if(songlist_bestaat_bool == false){
+          if(songlist_consists_bool == false){
             list_maken = true;
           }
           else{
@@ -860,14 +860,14 @@ void html_input(){
           webradio = true;
         }
       }
-      if(request->hasParam(LAAG)){
-        low_choice = ((request->getParam(LAAG)->value()) + String(terminator)).toInt();
+      if(request->hasParam(Low)){
+        low_choice = ((request->getParam(Low)->value()) + String(terminator)).toInt();
       }
-      if(request->hasParam(MIDDEN)){
-        middle_choice = ((request->getParam(MIDDEN)->value()) + String(terminator)).toInt();
+      if(request->hasParam(Middle)){
+        middle_choice = ((request->getParam(Middle)->value()) + String(terminator)).toInt();
       }
-      if(request->hasParam(HOOG)){
-        high_choice = ((request->getParam(HOOG)->value()) + String(terminator)).toInt();
+      if(request->hasParam(High)){
+        high_choice = ((request->getParam(High)->value()) + String(terminator)).toInt();
       }
       if(request->hasParam(VOLUME)){
         volume_choice = ((request->getParam(VOLUME)->value()) + String(terminator)).toInt();
@@ -928,7 +928,7 @@ void html_input(){
       String network = "                         ";
       String paswoord = "                          ";
       char terminator = char(0x0a);
-      wachttijd = millis();
+      Waittime = millis();
       choose = true;
       if(request->hasParam(MIN_INPUT)){
         gn_choice --;
@@ -950,21 +950,21 @@ void html_input(){
           play_mp3 = true;
         }
         if(gn_choice == 2){
-          songlist_bestaat_bool = false;
+          songlist_consists_bool = false;
           testDir(SD, "/songlist0");
-          if(songlist_bestaat_bool == false){
+          if(songlist_consists_bool == false){
             list_maken = true;
           }
         }
       }
-      if(request->hasParam(LAAG)){
-        low_choice = ((request->getParam(LAAG)->value()) + String(terminator)).toInt();
+      if(request->hasParam(Low)){
+        low_choice = ((request->getParam(Low)->value()) + String(terminator)).toInt();
       }
-      if(request->hasParam(MIDDEN)){
-        middle_choice = ((request->getParam(MIDDEN)->value()) + String(terminator)).toInt();
+      if(request->hasParam(Middle)){
+        middle_choice = ((request->getParam(Middle)->value()) + String(terminator)).toInt();
       }
-      if(request->hasParam(HOOG)){
-        high_choice = ((request->getParam(HOOG)->value()) + String(terminator)).toInt();
+      if(request->hasParam(High)){
+        high_choice = ((request->getParam(High)->value()) + String(terminator)).toInt();
       }
       if(request->hasParam(VOLUME)){
         volume_choice = ((request->getParam(VOLUME)->value()) + String(terminator)).toInt();
@@ -994,14 +994,14 @@ void html_input(){
         network = network + String(terminator);
         network.toCharArray(ssid, (network.length() +1));
         writeFile(SD, "/ssid", ssid);
-        ssid_ingevuld = true;
+        ssid_entered = true;
       }
       if(request->hasParam(STA_PSWD)){
         paswoord = (request->getParam(STA_PSWD)->value());
         paswoord = paswoord + String(terminator);
         paswoord.toCharArray(password, (paswoord.length() + 1));
         writeFile(SD, "/pswd", password);
-        pswd_ingevuld = true;
+        pswd_entered = true;
       }
       if(request->hasParam(IP_1_CHOICE)){
         ip_1_string = (request->getParam(IP_1_CHOICE)->value()) +String(terminator);
@@ -1016,9 +1016,9 @@ void html_input(){
         ip_4_string = (request->getParam(IP_4_CHOICE)->value()) +String(terminator);
       }
       
-      if((ssid_ingevuld) && (pswd_ingevuld)){
-        ssid_ingevuld = false;
-        pswd_ingevuld = false;
+      if((ssid_entered) && (pswd_entered)){
+        ssid_entered = false;
+        pswd_entered = false;
         ip_string = ip_1_string + "." + ip_2_string + "." + ip_3_string + "." + ip_4_string;
         ip_string.toCharArray(ip_char, (ip_string.length() + 1));
         writeFile(SD, "/ip", ip_char);
@@ -1046,7 +1046,7 @@ void setup(){
   }
 
  // Configure keys on ESP32 Audio Kit board
-  pinMode(BUTTON_1_PIN, INPUT_PULLUP);
+  pinMode(PIN_PLAY, INPUT_PULLUP);
   pinMode(PIN_CH_UP, INPUT_PULLUP);
   pinMode(PIN_CH_DOWN, INPUT_PULLUP);
   pinMode(PIN_VOL_UP, INPUT_PULLUP);
@@ -1076,7 +1076,7 @@ void setup(){
   mp3_per_songlist = pref.getShort("files");
   audio.setVolume(volume_chosen);
   audio.setTone(low_chosen, middle_chosen, high_chosen);
-  lees_CSV();
+  Read_CSV();
   readFile(SD, "/ssid");
   inputString.toCharArray(ssid, teller);
   readFile(SD, "/pswd");
@@ -1124,7 +1124,7 @@ void setup(){
 }
 bool pressed( const int pin )
 {
-  if (millis() > (debounce + 500))
+  if (millis() > (debounce + 300))
   {
       if (digitalRead(pin) == LOW)
       {
@@ -1135,7 +1135,7 @@ bool pressed( const int pin )
   return false;
 }
 void loop(){
-
+  
   if(writing_csv == true){
     writing_csv = false;
     writing_naar_csv();
@@ -1148,19 +1148,26 @@ void loop(){
     play_mp3 = false;
     mp3_chosen();
   }
+  
   if(webradio == true){
     webradio = false;
     chosen = choice;
     pref.putShort("station", chosen);
     radio_chosen();
+    Serial.println(sendername);
   }
-  if(((millis() - wachttijd) > 5000) && (choose == true)){
+  
+  if(((millis() - Waittime) > 5000) && (choose == true)){
     choose = false;
     choice = chosen;
   }
 
+      if (pressed(PIN_PLAY)) {
+       Serial.println("1-key pressed");
+       
+
+      }
       if (pressed(PIN_CH_DOWN)) {
-        Serial.println("channel-down");
         choice--;
         while((urlarray[choice][0] != *h_char) && (choice > 0)){
           choice --;
@@ -1169,14 +1176,15 @@ void loop(){
           choice = MAX_NUMBER_CHANNEL - 1;
             while((urlarray[choice][0] != *h_char) && (choice > 0)){
               choice --;
-            }
+            }       
         }
        chosen = choice;
           pref.putShort("station", chosen);
           webradio = true;
       }
+
+      
       if (pressed(PIN_CH_UP)) {
-        Serial.println("channel-up");
         choice++;
         if(choice > MAX_NUMBER_CHANNEL + 1){
           choice = 0;
@@ -1194,7 +1202,8 @@ void loop(){
         }
       chosen = choice;
           pref.putShort("station", chosen);
-          webradio = true;
+          webradio = true;  
+
       }
 
  bool updateVolume = false;
@@ -1224,6 +1233,8 @@ void loop(){
     dac.SetVolumeSpeaker(volume);
     dac.SetVolumeHeadphone(volume); 
   }
-  
+
   audio.loop();
+
+ 
 }
