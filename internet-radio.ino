@@ -1,22 +1,20 @@
 /*AI Thinker ESP32 Audio Kit v2.2 rev 2748 PCB(with X-Powers Technology© AC101 audio codec)
  * 
- * ORIGINAL PROJECT FROM: https://github.com/thieu-b55/ESP32-audiokit-webradio-webinterface
+ * ORIGINAL project with ES8388 CODEC from: https://github.com/thieu-b55/ESP32-audiokit-webradio-webinterface/blob/main/ESP32_webradio_audiokit.ino   Copyright (c) 2022 thieu-b55
+ * 
+ * MY MODDED project with AC101 CODEC from: https://github.com/kajari99/ai-thinker-esp32-audio-kit-v2-2-with-ac101/
  * 
  * Arduino Board Settings: ESP32 WROVER Module
  * Partition Scheme: Huge APP(3MB No OTA/1MB SPISS)
  * 
- * Audio librarie
- * https://github.com/schreibfaul1/ESP32-audioI2S
- * AC101 librarie
- * https://github.com/Yveaux/AC101
+ * Audio library:  https://github.com/schreibfaul1/ESP32-audioI2S
+ * AC101 library:  https://github.com/Yveaux/AC101
  * The AC101-master library gave me an error about a missing paragraph. You can fix this when you go to the AC101-master library. 
  * In this library you must open the file library.properties and add a line       paragraph=geen idee
  * 
- * FIXED IP ADDRESS IS 192.168.1.4
+ * FIXED IP ADDRESS IS 192.168.2.4
  * 
  * HTML Change UTF-8 Characters for Hungarian accented characters(e.g. á,é,í,ó,ö,ő,ú,ü,ű)
- * channel switch with 3-4 Key
- * volume setting with 5 KEY-MINUS and 6 KEY-PLUS
  * 
  * translate from Dutch to English
  * 
@@ -24,6 +22,7 @@
  * geen header
  * column 1  >>  sendername
  * column 2  >>  sender url
+ * 
  * Switch S1 SETTING: 1-OFF, 2-ON, 3-ON, 4-OFF, 5-OFF
 */
 
@@ -40,16 +39,15 @@
 #include "Wire.h"
 #include "AC101.h"
 
-static AC101 dac;     // AC101                                
+static AC101 dac;                               
 int volume = 20;
-
 const uint8_t volume_step = 2;
 unsigned long debounce = 0;
 
 Audio audio;
 Preferences pref;
 AsyncWebServer server(80);
-
+/* ===================== PINS ===================== */
 // SPI GPIOs
 #define SD_CS         13
 #define SPI_MOSI      15
@@ -67,17 +65,16 @@ AsyncWebServer server(80);
 #define IIC_CLK       32
 #define IIC_DATA      33
 
-// Buttons
-#define PIN_PLAY 36                // KEY 1
-#define BUTTON_2_PIN 13            // KEY 2/shared mit SPI_CS
-#define PIN_CH_DOWN 19             // KEY 3
-#define PIN_CH_UP 23               // KEY 4
-#define PIN_VOL_DOWN 18            // KEY 5
-#define PIN_VOL_UP 5               // KEY 6
-
 #define PA_EN               21   // amplifier enable
 #define MAX_NUMBER_CHANNEL  75
-
+/* ===================== BUTTONS ===================== */
+#define BUTTON_1 36            // KEY 1  (input-only pin)
+#define BUTTON_2 13            // KEY 2  (shared mit SPI_CS)
+#define BUTTON_3 19            // KEY 3  PREVIOUS
+#define BUTTON_4 23            // KEY 4  NEXT
+#define BUTTON_5 18            // KEY 5  VOLUME DOWN
+#define BUTTON_6 5             // KEY 6  VOLUME UP
+/* ============= (int,bool,char,string) ============== */
 int chosen = 1;
 int choice = 1;
 int following;
@@ -104,7 +101,7 @@ int mp3_number;
 int gn_choice = 0;
 int ip_1_int = 192;
 int ip_2_int = 168;
-int ip_3_int = 1;
+int ip_3_int = 2;
 int ip_4_int = 4;
 unsigned long watch_op_network;
 unsigned long readin_begin;
@@ -399,10 +396,7 @@ void writing_naar_csv(){
   }
   Read_CSV();
 }
-
-/*
- * Read in CSV file to Sender and URL Arry
- */
+ /* =========== Read in CSV file to Sender and URL Arry =========== */
 void Read_CSV(){
   CSV_Parser cp("ss", false, ',');
   if(cp.readSDfile("/sender_data.csv")){
@@ -416,7 +410,7 @@ void Read_CSV(){
     }
   }
 }
-
+/* ========  web server (with correct wifi settings)  =========== */
 const char index_html[] = R"rawliteral(
 <!DOCTYPE HTML>
 <html lang="hu">
@@ -612,7 +606,7 @@ const char network_html[] = R"rawliteral(
     </div>
     <div class="blanco_20">&nbsp;</div>
     </small>
-    <center><input type="submit" value="Bevestig" onclick="ok()"></center>
+    <center><input type="submit" value="Confirm" onclick="ok()"></center>
     </form>
     <br>
     <script>
@@ -736,7 +730,6 @@ String processor(const String& var){
       return(char_text5);
     }
   }
-  
   if(var == "text6"){
     if(!list_maken){
       return(Empty);
@@ -792,7 +785,7 @@ String processor(const String& var){
   }
   return String();
 }
-
+/* ========  web server (in case of incorrect wifi settings)  =========== */
 void html_input(){
   server.begin();
   Serial.println(WiFi.localIP());
@@ -848,7 +841,6 @@ void html_input(){
             choice = pref.getShort("station");
             webradio = true;
           }
-          
         }
         else if(choice == -1){
           chosen = choice;
@@ -1029,7 +1021,7 @@ void html_input(){
     });
   }
 }
-
+/* ===================== Void Setup ===================== */
 void setup(){
   Serial.begin(115200);
   pinMode(SD_CS, OUTPUT);
@@ -1045,12 +1037,13 @@ void setup(){
     delay(1000);
   }
 
- // Configure keys on ESP32 Audio Kit board
-  pinMode(PIN_PLAY, INPUT_PULLUP);
-  pinMode(PIN_CH_UP, INPUT_PULLUP);
-  pinMode(PIN_CH_DOWN, INPUT_PULLUP);
-  pinMode(PIN_VOL_UP, INPUT_PULLUP);
-  pinMode(PIN_VOL_DOWN, INPUT_PULLUP);
+/* =========== Configure BUTTONS =========== */
+  pinMode(BUTTON_1, INPUT);     //do not have internal pull-up or pull-down resistors
+  ///pinMode(BUTTON_2, INPUT_PULLUP); // The SD module uses GPIO13 as a CS (Chip Select) output, which is also used by BUTTON_2
+  pinMode(BUTTON_3, INPUT_PULLUP);
+  pinMode(BUTTON_4, INPUT_PULLUP);
+  pinMode(BUTTON_5, INPUT_PULLUP);
+  pinMode(BUTTON_6, INPUT_PULLUP);
 
 // audio.i2s_mclk_pin_select(I2S_MCLK);
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DSIN);
@@ -1134,6 +1127,7 @@ bool pressed( const int pin )
   }
   return false;
 }
+/* ===================== Void Loop ===================== */
 void loop(){
   
   if(writing_csv == true){
@@ -1161,13 +1155,11 @@ void loop(){
     choose = false;
     choice = chosen;
   }
-
-      if (pressed(PIN_PLAY)) {
-       Serial.println("1-key pressed");
-       
-
+/* =========== Setting the function of the buttons =========== */
+      if (pressed(BUTTON_1)) {
+       Serial.println("1-key pressed");   
       }
-      if (pressed(PIN_CH_DOWN)) {
+      if (pressed(BUTTON_3)) {
         choice--;
         while((urlarray[choice][0] != *h_char) && (choice > 0)){
           choice --;
@@ -1182,9 +1174,7 @@ void loop(){
           pref.putShort("station", chosen);
           webradio = true;
       }
-
-      
-      if (pressed(PIN_CH_UP)) {
+      if (pressed(BUTTON_4)) {
         choice++;
         if(choice > MAX_NUMBER_CHANNEL + 1){
           choice = 0;
@@ -1208,7 +1198,7 @@ void loop(){
 
  bool updateVolume = false;
 
-  if (pressed(PIN_VOL_UP))
+  if (pressed(BUTTON_6))
   {
     if (volume <= (63-volume_step))
     {
@@ -1217,7 +1207,7 @@ void loop(){
       updateVolume = true;
     } 
   }
-  if (pressed(PIN_VOL_DOWN))
+  if (pressed(BUTTON_5))
   {
     if (volume >= volume_step)
     {
@@ -1235,6 +1225,4 @@ void loop(){
   }
 
   audio.loop();
-
- 
 }
