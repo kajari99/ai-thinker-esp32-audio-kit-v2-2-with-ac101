@@ -1,22 +1,16 @@
 /*AI Thinker ESP32 Audio Kit v2.2 rev 2748 PCB(with X-Powers Technology© AC101 audio codec)
  * 
  * ORIGINAL project with ES8388 CODEC from: https://github.com/thieu-b55/ESP32-audiokit-webradio-webinterface/blob/main/ESP32_webradio_audiokit.ino   Copyright (c) 2022 thieu-b55
+ * MY project with AC101 CODEC from: https://github.com/kajari99/ai-thinker-esp32-audio-kit-v2-2-with-ac101/
  * 
- * MY MODDED project with AC101 CODEC from: https://github.com/kajari99/ai-thinker-esp32-audio-kit-v2-2-with-ac101/
- * 
- * Arduino Board Settings: ESP32 WROVER Module
- * Partition Scheme: Huge APP(3MB No OTA/1MB SPISS)
+ * Arduino IDE Board Settings: ESP32 WROVER Module    Partition Scheme: Huge APP(3MB No OTA/1MB SPISS)
  * 
  * Audio library:  https://github.com/schreibfaul1/ESP32-audioI2S
  * AC101 library:  https://github.com/Yveaux/AC101
  * The AC101-master library gave me an error about a missing paragraph. You can fix this when you go to the AC101-master library. 
  * In this library you must open the file library.properties and add a line       paragraph=geen idee
  * 
- * FIXED IP ADDRESS IS 192.168.2.4
- * 
- * HTML Change UTF-8 Characters for Hungarian accented characters(e.g. á,é,í,ó,ö,ő,ú,ü,ű)
- * 
- * translate from Dutch to English
+ * Translate from Dutch to English
  * 
  * sender_data.csv //read from SD CARD
  * geen header
@@ -24,6 +18,8 @@
  * column 2  >>  sender url
  * 
  * Switch S1 SETTING: 1-OFF, 2-ON, 3-ON, 4-OFF, 5-OFF
+ * 
+ * FIXED IP ADDRESS IS 192.168.2.4
 */
 
 #include "Arduino.h"
@@ -69,7 +65,7 @@ AsyncWebServer server(80);
 #define MAX_NUMBER_CHANNEL  75
 /* ===================== BUTTONS ===================== */
 #define BUTTON_1 36            // KEY 1  (input-only pin)
-#define BUTTON_2 13            // KEY 2  (shared mit SPI_CS)
+#define BUTTON_2 13            // KEY 2  (shared with SPI_CS)
 #define BUTTON_3 19            // KEY 3  PREVIOUS
 #define BUTTON_4 23            // KEY 4  NEXT
 #define BUTTON_5 18            // KEY 5  VOLUME DOWN
@@ -157,7 +153,7 @@ const char* High = "high_choice";
 const char* VOLUME = "volume_choice";
 const char* VOLUME_CONFIRM = "confirm_volume";
 const char* APssid = "ESP32webradio";
-const char* APpswd = "ESP32pswd";
+const char* APpswd = "12345678";
 const char* STA_SSID = "ssid";
 const char* STA_PSWD = "pswd";
 const char* SENDER = "sender";
@@ -487,7 +483,7 @@ const char index_html[] = R"rawliteral(
     </form>
     <br>
     <br>
-    <h6>Peter 2025</h6>
+    <h6>KPeter 2026</h6>
     <script>
       function confirm(){
         setTimeout(function(){document.location.reload();},250);
@@ -1007,14 +1003,13 @@ void html_input(){
       if(request->hasParam(IP_4_CHOICE)){
         ip_4_string = (request->getParam(IP_4_CHOICE)->value()) +String(terminator);
       }
-      
       if((ssid_entered) && (pswd_entered)){
         ssid_entered = false;
         pswd_entered = false;
         ip_string = ip_1_string + "." + ip_2_string + "." + ip_3_string + "." + ip_4_string;
         ip_string.toCharArray(ip_char, (ip_string.length() + 1));
         writeFile(SD, "/ip", ip_char);
-        Serial.println("Restart over 5 seconden");
+        Serial.println("Restart in 5 seconds");
         delay(5000);
         ESP.restart();
       }
@@ -1036,7 +1031,6 @@ void setup(){
     Serial.println("DAC connection failed");
     delay(1000);
   }
-
 /* =========== Configure BUTTONS =========== */
   pinMode(BUTTON_1, INPUT);     //do not have internal pull-up or pull-down resistors
   ///pinMode(BUTTON_2, INPUT_PULLUP); // The SD module uses GPIO13 as a CS (Chip Select) output, which is also used by BUTTON_2
@@ -1045,7 +1039,7 @@ void setup(){
   pinMode(BUTTON_5, INPUT_PULLUP);
   pinMode(BUTTON_6, INPUT_PULLUP);
 
-// audio.i2s_mclk_pin_select(I2S_MCLK);
+// audio.i2s_mclk_pin_select(I2S_MCLK);  //I2S_MCLK causes an error for AC101 audio codec
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DSIN);
   pref.begin("WebRadio", false); 
   if(pref.getString("control") != "dummy loaded"){
@@ -1157,7 +1151,7 @@ void loop(){
   }
 /* =========== Setting the function of the buttons =========== */
       if (pressed(BUTTON_1)) {
-       Serial.println("1-key pressed");   
+       Serial.println("1-key pressed , no function");   
       }
       if (pressed(BUTTON_3)) {
         choice--;
@@ -1170,11 +1164,11 @@ void loop(){
               choice --;
             }       
         }
-       chosen = choice;
+          chosen = choice;
           pref.putShort("station", chosen);
           webradio = true;
-      }
-      if (pressed(BUTTON_4)) {
+        }
+        if (pressed(BUTTON_4)) {
         choice++;
         if(choice > MAX_NUMBER_CHANNEL + 1){
           choice = 0;
@@ -1193,36 +1187,32 @@ void loop(){
       chosen = choice;
           pref.putShort("station", chosen);
           webradio = true;  
-
       }
 
  bool updateVolume = false;
 
-  if (pressed(BUTTON_6))
+  if (pressed(BUTTON_6)) // Increase volume
   {
     if (volume <= (63-volume_step))
     {
-      // Increase volume
       volume += volume_step;
       updateVolume = true;
     } 
   }
-  if (pressed(BUTTON_5))
+  
+  if (pressed(BUTTON_5)) // Decrease volume
   {
     if (volume >= volume_step)
     {
-      // Decrease volume
       volume -= volume_step;
       updateVolume = true;
     } 
   }
-  if (updateVolume)
+  if (updateVolume) // Volume change requested
   {
-    // Volume change requested
     Serial.printf("Volume %d\n", volume);
     dac.SetVolumeSpeaker(volume);
     dac.SetVolumeHeadphone(volume); 
   }
-
   audio.loop();
 }
