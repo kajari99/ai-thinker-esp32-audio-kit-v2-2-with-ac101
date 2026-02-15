@@ -1,7 +1,7 @@
 /*AI Thinker ESP32 Audio Kit v2.2 rev 2748 PCB(with X-Powers Technology© AC101 audio codec)
  * 
  * ORIGINAL project with ES8388 CODEC from: https://github.com/thieu-b55/ESP32-audiokit-webradio-webinterface/blob/main/ESP32_webradio_audiokit.ino   Copyright (c) 2022 thieu-b55
- * MY project with AC101 CODEC from: https://github.com/kajari99/ai-thinker-esp32-audio-kit-v2-2-with-ac101/
+ * MY project with AC101 CODEC from: https://github.com/kajari99/Ai-Thinker-esp32-AC101-internet-radio
  * 
  * Arduino IDE Board Settings: ESP32 WROVER Module    Partition Scheme: Huge APP(3MB No OTA/1MB SPISS)
  * 
