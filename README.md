@@ -17,6 +17,9 @@ The ORIGINAL project with ES8388 CODEC from: https://github.com/thieu-b55/ESP32-
 
 I modified thieu-b55's project to work with the ac101 audio codec, and added the buttons to use it.
 
+
+I have archived the libraries used for the project here in the libraries.
+
 -------------------------------------------------------------------------------------------------------------------------------------------------
 Comment:
 
