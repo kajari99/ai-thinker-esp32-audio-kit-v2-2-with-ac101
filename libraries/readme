@@ -1,3 +1,24 @@
+I have archived the libraries used for the project here in the libraries.
 
- * Audio librarie
- * https://github.com/schreibfaul1/ESP32-audioI2S
+The libraries are contained in the "src" folders.
+
+
+Origin of libraries:
+
+https://github.com/schreibfaul1/ESP32-audioI2S
+
+https://github.com/Yveaux/AC101
+
+https://github.com/ESP32Async/AsyncTCP.git
+
+https://github.com/michalmonday/CSV-Parser-for-Arduino
+
+https://github.com/ESP32Async/ESPAsyncWebServer
+
+Comment:
+
+
+Library owners can modify the support.  Therefore, it only works stably in archive state without updating libraries!
+
+
+Attention! Arduino IDE is prone to automatic library updates!
